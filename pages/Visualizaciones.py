@@ -358,7 +358,7 @@ fig11.update_layout(title_text="Top 10 Productos por Ganancia Generada")
 fig11.update_xaxes(title_text="Ganancia ($)")
 fig11.update_yaxes(title_text="Producto")
 
-
+st.write("""Analizamos las ventas por productos es importante distinguir entre qué es lo más vendido (gráfico de la izquierda) y qué genera más ingresos (gráfico de la derecha), y vemos que no necesariamente coincide. Esto sirve para comprender cuáles de los productos vendidos son más atractivos para los clientes y cuáles de los mismos generan más ganancia para la empresa. En base a eso se pueden realizar luego análisis adicionales para determinar si es conveniente dejar de vender un producto que aunque popular no conlleva ganancias acordes, o si es posible propocionar ciertos productos que dejan mayor margen de ganancia y buscar generar interés en los clientes. Asimismo vemos que en ambos gráficos los puestos 2 y 3 de cada ranking están ocupados por los mismos productos. Eso indicaría que fomentar la venta de los mismos puede aumentar en paralelo el interés de los clientes y las ganancias de la empresa.""")
 
 with st.expander('Código'):
     st.code('''df_productos = df_limpio3
@@ -389,16 +389,236 @@ with st.expander('Visualización'):
     opcion_producto=st.selectbox('Seleccionar vista de ventas:', ['Unidades Vendidas', 'Ganancia Generada'], index=0, key='productos')
     if opcion_producto == 'Unidades Vendidas':
         st.plotly_chart(fig10)
-        st.write('''El gráfico muestra los 10 productos más vendidos por unidades. Se observa que los productos más vendidos son 'WORLD WAR 2 GLIDERS ASSTD DESIGNS' y 'JUMBO BAG RED RETROSPOT'. Esto indica que estos productos tienen una alta demanda y podrían ser considerados para promociones especiales o para mantener un inventario adecuado para satisfacer la demanda del mercado.''')
+        #st.write('''El gráfico muestra los 10 productos más vendidos por unidades. Se observa que los productos más vendidos son 'WORLD WAR 2 GLIDERS ASSTD DESIGNS' y 'JUMBO BAG RED RETROSPOT'. Esto indica que estos productos tienen una alta demanda y podrían ser considerados para promociones especiales o para mantener un inventario adecuado para satisfacer la demanda del mercado.''')
     else:
         st.plotly_chart(fig11)
-        st.write('''El gráfico muestra los 10 productos que generan más ganancias. Se observa que los productos que generan más ganancias son 'REGENCY CAKESTAND 3 TIER' y 'WHITE HANGING HEART T-LIGHT HOLDER'. Esto indica que estos productos tienen un alto valor de venta y podrían ser considerados para estrategias de marketing y ventas para aumentar la rentabilidad.''')
+        #st.write('''El gráfico muestra los 10 productos que generan más ganancias. Se observa que los productos que generan más ganancias son 'REGENCY CAKESTAND 3 TIER' y 'WHITE HANGING HEART T-LIGHT HOLDER'. Esto indica que estos productos tienen un alto valor de venta y podrían ser considerados para estrategias de marketing y ventas para aumentar la rentabilidad.''')
 
+st.write('''Alineado con los datos previamente visualizados donde se evidencia la preponderancia de Reino Unido en comparación a otros países al analizar los productos más vendidos cambia significativamente si dejamos por fuera a UK.''')
+st.html('''<h3><font color="06d6a0">7.2. Top 5 Productos en los 5 países con más ventas</font></h3>''')
+
+# Filtrar el DataFrame para incluir solo cantidades mayores a cero
+df_positive_sales = df_productos[df_productos['Quantity'] > 0]
+
+# Paso 1: Encontrar los 5 países con mayor cantidad de ventas (sumando la columna "Quantity")
+top_5_countries = (df_positive_sales.groupby('Country')['Quantity']
+                   .sum()
+                   .nlargest(5)
+                   .reset_index())
+top_5_countries_list = top_5_countries['Country'].tolist()
+
+# Paso 2: Filtrar el DataFrame solo para estos 5 países
+df_top_countries = df_positive_sales[df_positive_sales['Country'].isin(top_5_countries_list)]
+
+# Paso 3: Agrupar por país y producto para sumar las cantidades vendidas
+top_products_in_top_countries = (df_top_countries.groupby(['Country', 'Description'])['Quantity']
+                                 .sum()
+                                 .reset_index()
+                                 .sort_values(['Country', 'Quantity'], ascending=[True, False]))
+
+# Paso 4: Seleccionar los 5 productos más vendidos por país
+top_5_products_in_top_countries = top_products_in_top_countries.groupby('Country').head(5)
+
+# Crear DataFrame sin UK
+df_top_countries_sinUK = df_top_countries[df_top_countries['Country'] != 'United Kingdom']
+top_products_in_top_countries_sinUK = (df_top_countries_sinUK.groupby(['Country', 'Description'])['Quantity']
+                                       .sum()
+                                       .reset_index()
+                                       .sort_values(['Country', 'Quantity'], ascending=[True, False]))
+top_5_products_in_top_countries_sinUK = top_products_in_top_countries_sinUK.groupby('Country').head(5)
+
+# Paso 5: Graficar
+fig_top_products_top_countries = px.bar(top_5_products_in_top_countries, x='Quantity', y='Description',
+                                        color='Country', orientation='h',
+                                        title="Top 5 Productos Más Vendidos en los 5 Países con Más Ventas",
+                                        labels={"Quantity": "Cantidad de Unidades", "Description": "Producto", "Country": "País"})
+fig_top_products_top_countries.update_layout(xaxis_title="Unidades Vendidas", yaxis_title="Producto",
+                                             title_x=0.5, font=dict(size=12), barmode='stack')
+
+fig_top_products_top_countries_sinUK = px.bar(top_5_products_in_top_countries_sinUK, x='Quantity', y='Description',
+                                              color='Country', orientation='h',
+                                              title="Top 5 Productos Más Vendidos en los 5 Países con Más Ventas (Sin UK)",
+                                              labels={"Quantity": "Cantidad de Unidades", "Description": "Producto", "Country": "País"})
+fig_top_products_top_countries_sinUK.update_layout(xaxis_title="Unidades Vendidas", yaxis_title="Producto",
+                                                   title_x=0.5, font=dict(size=12), barmode='stack')
+
+with st.expander('Código'):
+    st.code('''# Filtrar el DataFrame para incluir solo cantidades mayores a cero
+df_positive_sales = df_productos[df_productos['Quantity'] > 0]
+
+# Paso 1: Encontrar los 5 países con mayor cantidad de ventas (sumando la columna "Quantity")
+top_5_countries = (df_positive_sales.groupby('Country')['Quantity']
+                   .sum()
+                   .nlargest(5)
+                   .reset_index())
+top_5_countries_list = top_5_countries['Country'].tolist()
+
+# Paso 2: Filtrar el DataFrame solo para estos 5 países
+df_top_countries = df_positive_sales[df_positive_sales['Country'].isin(top_5_countries_list)]
+
+# Paso 3: Agrupar por país y producto para sumar las cantidades vendidas
+top_products_in_top_countries = (df_top_countries.groupby(['Country', 'Description'])['Quantity']
+                                 .sum()
+                                 .reset_index()
+                                 .sort_values(['Country', 'Quantity'], ascending=[True, False]))
+
+# Paso 4: Seleccionar los 5 productos más vendidos por país
+top_5_products_in_top_countries = top_products_in_top_countries.groupby('Country').head(5)
+
+# Crear DataFrame sin UK
+df_top_countries_sinUK = df_top_countries[df_top_countries['Country'] != 'United Kingdom']
+top_products_in_top_countries_sinUK = (df_top_countries_sinUK.groupby(['Country', 'Description'])['Quantity']
+                                       .sum()
+                                       .reset_index()
+                                       .sort_values(['Country', 'Quantity'], ascending=[True, False]))
+top_5_products_in_top_countries_sinUK = top_products_in_top_countries_sinUK.groupby('Country').head(5)
+
+# Paso 5: Graficar
+fig_top_products_top_countries = px.bar(top_5_products_in_top_countries, x='Quantity', y='Description',
+                                        color='Country', orientation='h',
+                                        title="Top 5 Productos Más Vendidos en los 5 Países con Más Ventas",
+                                        labels={"Quantity": "Cantidad de Unidades", "Description": "Producto", "Country": "País"})
+fig_top_products_top_countries.update_layout(xaxis_title="Unidades Vendidas", yaxis_title="Producto",
+                                             title_x=0.5, font=dict(size=12), barmode='stack')
+
+fig_top_products_top_countries_sinUK = px.bar(top_5_products_in_top_countries_sinUK, x='Quantity', y='Description',
+                                              color='Country', orientation='h',
+                                              title="Top 5 Productos Más Vendidos en los 5 Países con Más Ventas (Sin UK)",
+                                              labels={"Quantity": "Cantidad de Unidades", "Description": "Producto", "Country": "País"})
+fig_top_products_top_countries_sinUK.update_layout(xaxis_title="Unidades Vendidas", yaxis_title="Producto",
+                                                   title_x=0.5, font=dict(size=12), barmode='stack')''')
+
+with st.expander('Visualización'):
+    opcion_top_productos = st.selectbox('Seleccionar vista de ventas:', ['Con UK', 'Sin UK'], index=0, key='top_productos')
+    if opcion_top_productos == 'Con UK':
+        st.plotly_chart(fig_top_products_top_countries)
+    else:
+        st.plotly_chart(fig_top_products_top_countries_sinUK)
 
 
 st.html('''<h2><font color="ffd166">8. Análisis de Clientes</font></h2>''')
 
-st.html('''<h3><font color="06d6a0">7.1. Mapa Coroplético</font></h3>''')
+st.html('''<h3><font color="06d6a0">8.1. Frecuencia de Compra y Gasto Promedio</font></h3>''')
+
+# Frecuencia de compras
+compras_por_cliente = df_limpio3.groupby('CustomerID')['InvoiceNo'].count().reset_index()
+compras_por_cliente.sort_values(by='InvoiceNo', ascending=False, inplace=True)
+compras_por_cliente.rename(columns={'InvoiceNo': 'CantidadCompras'}, inplace=True)
+
+# Gastos promedio cliente
+df_sinUK = df_limpio3[df_limpio3['Country'] != 'United Kingdom']
+gasto_promedio_cliente = df_sinUK.groupby('CustomerID')['Total'].mean().reset_index()
+gasto_promedio_cliente.sort_values(by='Total', ascending=True, inplace=True)
+gasto_promedio_cliente.rename(columns={'Total': 'GastoPromedio'}, inplace=True)
+
+# Crear gráficos con Plotly
+fig_frecuencia = px.histogram(compras_por_cliente, x='CantidadCompras', nbins=100, title='Frecuencia de Compras por Cliente')
+fig_frecuencia.update_layout(xaxis_title='Cantidad de Compras', yaxis_title='Frecuencia')
+
+fig_gasto_promedio = px.scatter(gasto_promedio_cliente, x='CustomerID', y='GastoPromedio', title='Gasto Promedio por Cliente')
+fig_gasto_promedio.update_layout(xaxis_title='ID de Cliente', yaxis_title='Gasto Promedio (USD)')
+
+# Selector para ver frecuencia de compras o gasto promedio
+
+with st.expander('Código'):
+    st.code('''# Frecuencia de compras
+# cantidad de compras por cliente.
+compras_por_cliente = df_limpio3.groupby('CustomerID')['InvoiceNo'].count().reset_index()
+compras_por_cliente.sort_values(by='InvoiceNo', ascending=False)
+compras_por_cliente.rename(columns={'InvoiceNo': 'CantidadCompras'}, inplace=True)
+compras_por_cliente =compras_por_cliente['CantidadCompras']
+#print(compras_por_cliente)
+
+# gastos promedio cliente
+df_sinUK = df_limpio3[df_limpio3['Country'] != 'United Kingdom']
+# Calcula el gasto promedio por cliente
+gasto_promedio_cliente= df_sinUK.groupby('CustomerID')['Total'].mean()
+print(gasto_promedio_cliente.sort_values(ascending=True))
+
+
+# Crea la figura con dos subplots
+fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+
+# Histograma de frecuencia de compras
+axes[0].hist(compras_por_cliente, bins=100, edgecolor='black')
+axes[0].set_xlabel('Cantidad de Compras')
+axes[0].set_ylabel('Frecuencia')
+axes[0].set_title('Frecuencia de Compras por cliente')
+axes[0].set_xlim(0, 900)  # Establece el límite del eje x
+
+# Gráfico de dispersión del gasto promedio por cliente
+axes[1].scatter(gasto_promedio_cliente.index, gasto_promedio_cliente.values)
+axes[1].set_xlabel('ID de Cliente')
+axes[1].set_ylabel('Gasto promedio (USD)')
+axes[1].set_title('Gasto Promedio por Cliente')''')
+
+with st.expander('Visualización'):
+    opcion_analisis = st.selectbox('Seleccionar vista de análisis:', ['Frecuencia de Compra', 'Gasto Promedio'], index=0)
+
+    if opcion_analisis == 'Frecuencia de Compra':
+        st.plotly_chart(fig_frecuencia)
+    else:
+        st.plotly_chart(fig_gasto_promedio)
+
+
+st.html('''<h3><font color="06d6a0">8.2.  Top 5 de clientes con mayor gasto en compras y top 5 de productos más adquiridos por estos clientes.</font></h3>''')
+
+# Top 5 de clientes que más gastaron (customerID, Total), redondeando Total.
+top_5_clientes = df_limpio3.groupby('CustomerID')['Total'].sum().round(2).nlargest(5).reset_index()
+
+# Obtener la lista de los CustomerID de los top 5 clientes
+top_5_customer_ids = top_5_clientes['CustomerID']
+
+# Filtrar el DataFrame para incluir solo las compras de los top 5 clientes
+df_top_customers = df_limpio3[df_limpio3['CustomerID'].isin(top_5_customer_ids)]
+
+# Agrupar por descripción del producto y sumar la cantidad
+top_products = df_top_customers.groupby('Description')['Quantity'].sum().nlargest(5).reset_index()
+
+# Graficar los resultados con Plotly
+fig_top_products = px.bar(top_products, x='Description', y='Quantity', title='Top 5 Productos más consumidos por los Top 5 Clientes',height=700)
+fig_top_products.update_layout(xaxis_title='Descripción del Producto', yaxis_title='Cantidad', xaxis_tickangle=-45)
+
+with st.expander("Código"):
+    st.code("""# Top 5 de clientes que más gastaron (customerID, Total), redondeando Total.
+top_5_clientes = df_limpio3.groupby('CustomerID')['Total'].sum().round(2).nlargest(5).reset_index()
+print(top_5_clientes)
+
+# Obtener la lista de los CustomerID de los top 5 clientes
+top_5_customer_ids = top_5_clientes['CustomerID']
+
+# Filtrar el DataFrame para incluir solo las compras de los top 5 clientes
+df_top_customers = df_limpio3[df_limpio3['CustomerID'].isin(top_5_customer_ids)]
+
+# Agrupar por descripción del producto y sumar la cantidad
+top_products = df_top_customers.groupby('Description')['Quantity'].sum().nlargest(5).reset_index()
+
+# Mostrar los resultados
+#print("Top 5 productos más comprados por los top 5 clientes:")
+#print(top_products)
+
+
+# Graficar los resultados
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(10, 6))
+plt.bar(top_products['Description'], top_products['Quantity'])
+plt.xlabel("Descripción del Producto")
+plt.ylabel("Cantidad")
+plt.title("Top 5 Productos más consumidos por los Top 5 Clientes")
+plt.xticks(rotation=45, ha="right")""")
+
+with st.expander('Visualización'):
+    st.write(top_5_clientes)
+    st.plotly_chart(fig_top_products)
+
+st.divider()
+
+
+st.html('''<h1><font color="#ef476f">De Yapa</font></h1>''')
+st.html('''<h2><font color="ffd166">9. Análisis de Clientes</font></h2>''')
+
+st.html('''<h3><font color="06d6a0">9.1. Mapa Coroplético</font></h3>''')
 
 
 # Crear DataFrame para cantidad de clientes por país
@@ -488,7 +708,7 @@ with st.expander('Visualización'):
 
 
 
-st.html('''<h3><font color="06d6a0">7.2. Cantidad de clientes por pais (Top 10)</font></h3>''')
+st.html('''<h3><font color="06d6a0">9.2. Cantidad de clientes por pais (Top 10)</font></h3>''')
 
 # Top 10 países con mayor cantidad de clientes
 top_10_paises_mas_clientes = clientes_por_pais.nlargest(10, 'CustomerCount').sort_values(by='CustomerCount', ascending=True)
