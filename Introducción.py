@@ -15,7 +15,7 @@ def configuraciones(page_title, page_icon):
 
 
 def app():
-    configuraciones("Introdución", "💻")
+    configuraciones("Introducción", "💻")
     st.image('IFTS_18.png', width=200)
     st.html('''<h1><font color="BFECFF">Análisis Exploratorio Grupo N°2</font></h1>''')
     st.html('<h3><b>🏫 Instituto:</b> IFTS 18.</h3>')
