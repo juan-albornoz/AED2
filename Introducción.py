@@ -13,13 +13,15 @@ def configuraciones(page_title, page_icon):
 - Gonzalo Rey del Castillo''')
 
 
+
 def app():
     configuraciones("Introdución", "💻")
-    st.image('IFTS_18.png')
-    st.title('Introducción')
-    st.write('Bienvenido al Análisis Exploratorio de Datos del Grupo N°2 por la Materia de Análisis Exploratorio de Datos a Cargo del Ing. Miguel Pita.')
-    st.markdown('''Vamos a trabajar con el dataset de `online_retail.xlsx`, el cual contiene información de ventas de una empresa de artículos de cotillón.
-''')
+    st.image('IFTS_18.png', width=200)
+    st.html('''<h1><font color="BFECFF">Análisis Exploratorio Grupo N°2</font></h1>''')
+    st.html('<h3><b>🏫 Instituto:</b> IFTS 18.</h3>')
+    st.html('<h3><b>📝 Materia:</b> Análisis Exploratorio de Datos.</h3>')
+    st.html('<h3><b>👨🏻‍🏫 Docente:</b> Ing. Miguel Pita.</h3>')
+    st.html('<h3><b>💾 Dataset:</b> <code><font color="BFECFF">online_retail</font></code></h3>')
 
 if __name__ == '__main__':
     app()
