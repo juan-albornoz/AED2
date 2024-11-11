@@ -248,7 +248,7 @@ with st.expander('df_limpio3.info()'):
     s1 = buffer1.getvalue()
     st.text(s1)
 
-st.page_link('pages/Visualizaciones.py', label="Vamos a las Visualizaciones", icon="📊")
+#st.page_link('pages/Visualizaciones.py', label="Vamos a las Visualizaciones", icon="📊")
 
 #
 #st.html('''<h2><font color="ffd166">5. Análisis de ventas por mes, país y días</font></h2>''')
