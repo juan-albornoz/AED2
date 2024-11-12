@@ -119,7 +119,7 @@ df_top5_columnas = df_top5_columnas.drop(columns=['Year','Month'])
 
 
 with st.expander('DataFrame Top 5 Año'):
-    st.code('''paises_top5 = ['United Kingdom', 'France', 'Germany', 'Netherlands', 'EIRE']
+    st.code('''paises_top5 = ['United Kingdom', 'France', 'Germany', 'Netherlands', 'Ireland']
 
 df_top5_ventas_por_mes = df_limpio3[df_limpio3['Country'].isin(paises_top5)]
 
@@ -149,21 +149,23 @@ df_top_sinUK = df_top5_columnas[df_top5_columnas['Country'] != 'United Kingdom']
 fig4 = px.line(df_top_sinUK, x='Año y mes', y='Total', color='Country', markers=True, title='Total por mes-año sin United Kingdom')
 fig4.update_layout(xaxis_title='Mes-Año', yaxis_title='Total')''')
 
-# Selector para ver evolución de ventas con y sin UK
-with st.expander('Visualización de Evolución de Ventas'):
-    opcion_evolucion = st.selectbox('Seleccionar vista de evolución de ventas:', ['Con UK', 'Sin UK'], index=0)
+# Mostrar gráficos uno al lado del otro
+with st.expander('Visualización'):
+    col1, col2 = st.columns(2)
 
-    if opcion_evolucion == 'Con UK':
-        st.plotly_chart(fig3)
-        st.write('''- UK tiene un volumen de ventas significativamente mayor que los otros países (Irlanda, Francia, Alemania y Países Bajos) en todos los períodos del año. Esto hace que las fluctuaciones de los demás países sean difíciles de distinguir en la escala general.
+with col1:
+    st.plotly_chart(fig3)
+    st.write('''- UK tiene un volumen de ventas significativamente mayor que los otros países (Irlanda, Francia, Alemania y Países Bajos) en todos los períodos del año. Esto hace que las fluctuaciones de los demás países sean difíciles de distinguir en la escala general.
 
 - UK muestra picos de ventas particularmente altos alrededor de septiembre y octubre de 2011.''')
-    else:
-        st.plotly_chart(fig4)
-        st.write('''- **Variabilidad de ventas:** cada país muestra fluctuaciones a lo largo del año, esto indica una demanda inestable.
+
+with col2:
+    st.plotly_chart(fig4)
+    st.write('''- **Variabilidad de ventas:** cada país muestra fluctuaciones a lo largo del año, esto indica una demanda inestable.
 
 - **Picos de ventas:** Francia y los Países Bajos registran picos en noviembre. Alemania alcanza su punto máximo en mayo, mientras que Irlanda tiene ventas más constantes con un pico en febrero.''')
-    st.write('''**Con estos datos podemos sugerir realizar promociones específicas en los meses con menor demanda. También, estrategias promocionales enfocadas en los picos de ventas para aumentar los ticket promedio**''')
+
+st.write('''**Con estos datos podemos sugerir realizar promociones específicas en los meses con menor demanda. También, estrategias promocionales enfocadas en los picos de ventas para aumentar los ticket promedio**''')
 
 
 st.html('''<h3><font color="06d6a0">5.3. Distribución de ventas por día de la semana</font></h3>''')
@@ -177,10 +179,13 @@ df_limpio3['DayOfWeek'] = df_limpio3['InvoiceDate'].dt.day_name()
 ventas_por_dia = df_limpio3.groupby('DayOfWeek')['Total'].sum().reindex(
     ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 )
+
+# Establecer las ventas del sábado a 0
+
 max_day = ventas_por_dia.idxmax()
 colors = ['Otros días' if day != max_day else 'Día con más ventas' for day in ventas_por_dia.index]
 
-fig5 = px.bar(ventas_por_dia.reset_index(), x='DayOfWeek', y='Total', color=colors, title='Distribución de Ventas por Día de la Semana')
+fig5 = px.bar(ventas_por_dia.reset_index(), x='DayOfWeek', y='Total', color=colors, title='Distribución de Ventas por Día de la Semana',height=700)
 fig5.update_layout(xaxis_title='Día de la Semana', yaxis_title='Total de Ventas', xaxis={'categoryorder':'array', 'categoryarray':['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']})
 
 with st.expander('Código'):
@@ -254,8 +259,7 @@ fig7 = px.scatter_geo(
     projection='natural earth',
     size="Total",
     animation_frame='Año y mes',
-    scope='europe',
-    width=800
+    scope='europe'
 )
 fig7.update_layout(title='Evolución de las Ventas por Pais y por mes (Sin UK)')
 
@@ -386,13 +390,11 @@ fig11.update_xaxes(title_text="Ganancia ($)")
 fig11.update_yaxes(title_text="Producto")''')
 
 with st.expander('Visualización'):
-    opcion_producto=st.selectbox('Seleccionar vista de ventas:', ['Unidades Vendidas', 'Ganancia Generada'], index=0, key='productos')
-    if opcion_producto == 'Unidades Vendidas':
+    col1, col2 = st.columns(2)
+    with col1:
         st.plotly_chart(fig10)
-        #st.write('''El gráfico muestra los 10 productos más vendidos por unidades. Se observa que los productos más vendidos son 'WORLD WAR 2 GLIDERS ASSTD DESIGNS' y 'JUMBO BAG RED RETROSPOT'. Esto indica que estos productos tienen una alta demanda y podrían ser considerados para promociones especiales o para mantener un inventario adecuado para satisfacer la demanda del mercado.''')
-    else:
+    with col2:
         st.plotly_chart(fig11)
-        #st.write('''El gráfico muestra los 10 productos que generan más ganancias. Se observa que los productos que generan más ganancias son 'REGENCY CAKESTAND 3 TIER' y 'WHITE HANGING HEART T-LIGHT HOLDER'. Esto indica que estos productos tienen un alto valor de venta y podrían ser considerados para estrategias de marketing y ventas para aumentar la rentabilidad.''')
 
 st.write('''Alineado con los datos previamente visualizados donde se evidencia la preponderancia de Reino Unido en comparación a otros países al analizar los productos más vendidos cambia significativamente si dejamos por fuera a UK.''')
 st.html('''<h3><font color="06d6a0">7.2. Top 5 Productos en los 5 países con más ventas</font></h3>''')
@@ -553,11 +555,10 @@ axes[1].set_ylabel('Gasto promedio (USD)')
 axes[1].set_title('Gasto Promedio por Cliente')''')
 
 with st.expander('Visualización'):
-    opcion_analisis = st.selectbox('Seleccionar vista de análisis:', ['Frecuencia de Compra', 'Gasto Promedio'], index=0)
-
-    if opcion_analisis == 'Frecuencia de Compra':
+    col1, col2 = st.columns(2)
+    with col1:
         st.plotly_chart(fig_frecuencia)
-    else:
+    with col2:
         st.plotly_chart(fig_gasto_promedio)
 
 
@@ -611,6 +612,25 @@ plt.xticks(rotation=45, ha="right")""")
 with st.expander('Visualización'):
     st.write(top_5_clientes)
     st.plotly_chart(fig_top_products)
+
+
+
+st.divider()
+
+st.html('''<h1><font color="#ef476f">Conclusiones</font></h1>''')
+
+with st.expander("Conclusiones:"):
+    st.write('''El análisis detallado de las ventas y el comportamiento del mercado proporciona una base sólida para desarrollar estrategias comerciales y de marketing efectivas. Al enfocarse en los mercados clave, optimizar el inventario, personalizar las ofertas para los clientes y expandir la presencia en mercados menos explotados, la empresa puede mejorar su rendimiento y aumentar su rentabilidad.''')
+
+
+
+
+
+
+
+
+
+
 
 st.divider()
 
